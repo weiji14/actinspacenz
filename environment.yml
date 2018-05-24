@@ -1,0 +1,20 @@
+name: actinspacenz
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - geopandas
+  - jupyterlab
+  - keras>=2.1.5
+  - keras-gpu>=2.1.5
+  - owslib
+  - pandas
+  - python>=3.6
+  - conda-forge/label/dev::rasterio
+  - scikit-learn
+  - scikit-image
+  - tensorflow>=1.7.0
+  - tensorflow-gpu>=1.7.0
+  - pip:
+    - tensorflowjs
+prefix: /home/user/miniconda3
