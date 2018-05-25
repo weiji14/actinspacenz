@@ -15,6 +15,7 @@ dependencies:
   - scikit-image
   - tensorflow>=1.7.0
   - tensorflow-gpu>=1.7.0
+  - tqdm
   - pip:
     - quilt
     - tensorflowjs
