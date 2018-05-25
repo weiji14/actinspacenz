@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge, chrome=1" />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+    <title>Maritime ship detector</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+        #devTestingDemo {
+            position: relative;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            height: 90%;
+            z-index:1;
+        }
+        #delete, #export, #fileInputButton {
+            position: absolute;
+            top:135px;
+            right:10px;
+            z-index:100;
+            background:white;
+            color:black;
+            padding:6px;
+            border-radius:4px;
+            font-family: 'Helvetica Neue';
+            cursor: pointer;
+            font-size:12px;
+            text-decoration:none;
+        }
+        #delete {
+            top:165px;
+        }
+        #export {
+            top:195px;
+        }
+    </style>
+    
+    <!--Add leaflet-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.2.0/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.2.0/leaflet.js"></script>
+    
+    <!--Add leaflet.draw plugin-->
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.2/leaflet.draw.css' />
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.2/leaflet.draw.js'></script>
+    
+    <!--Add proj4js-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.4/proj4-src.js"></script>
+    
+
+</head>
+
+<body>
+<div id="devTestingDemo"></div>
+<div id='fileInputButton'>Upload GeoJSON</div>
+<input id="fileInput" type="file" style="display:none"/>
+<div id='delete'>Delete Features</div>
+<a href='#' id='export'>Export GeoJSON</a>
+<p>
+This is a demo map using Sentinel 1 and 2 data where you can draw polygons around boats!
+</p>
+
+<script>
+
+// Sentinel Hub WMS service
+// tiles generated using EPSG:3857 projection - Leaflet takes care of that
+let baseUrl = "https://services.sentinel-hub.com/ogc/wms/34e67d06-ee4c-4212-a2a8-f29f7a0af8fa";
+let sentinel2 = L.tileLayer.wms(baseUrl, {
+    tileSize: 512,
+    attribution: '&copy; <a href="http://www.sentinel-hub.com/" target="_blank">Sentinel Hub</a>',
+    maxcc:20,
+    minZoom:5,
+    maxZoom:16,
+    preset:"TRUE_COLOR",
+    gain:"0.3",
+    gamma:"0.8",
+ 	layers:"TRUE_COLOR",
+ 	time:"2014-04-03/2018-05-25",
+    format: 'image/png',
+});
+
+let sentinel1 = L.tileLayer.wms(baseUrl, {
+    tileSize: 512,
+    attribution: '&copy; <a href="http://www.sentinel-hub.com/" target="_blank">Sentinel Hub</a>',
+    maxcc:20, 
+ 	minZoom:5, 
+ 	maxZoom:16, 
+ 	preset:"SENTINEL-1-IW-RGB-RATIO", 
+ 	layers:"SENTINEL-1-IW-RGB-RATIO", 
+ 	time:"2014-04-03/2018-05-25",
+    transparent: true,
+    format: 'image/png',
+}); 
+
+let predictGroup = L.layerGroup()  //we'll put our predicted images into this layer group
+
+let overlayMaps = {
+    'Sentinel 2 L2C': sentinel2
+};
+
+let baseMaps = {
+    'Sentinel 1 IW': sentinel1,
+    //'Boat predictions': predictGroup
+}
+
+let map = L.map('devTestingDemo', {
+    center: [-36.75, 174.92], // lat/lng in EPSG:4326
+    zoom: 12,
+    layers: [sentinel1, predictGroup]
+});
+
+var layerController = L.control.layers(baseMaps, overlayMaps, {position: 'topleft'}).addTo(map);
+
+/****
+  Leaflet draw stuff, the feature group we'll add features to and drawing controls
+  Based on https://bl.ocks.org/danswick/d30c44b081be31aea483
+****/
+var featureGroup = L.featureGroup().addTo(map);
+
+document.getElementById('fileInput').addEventListener("change", function (evt) {
+  var file = evt.target.files[0], // Read first file for this example.
+      reader = new FileReader();
+
+  reader.onload = function (e) {
+    var fileText = e.target.result;
+        fileData = JSON.parse(fileText);
+        var loadedGroup = L.geoJson(fileData, {
+          onEachFeature: function (feature, layer) {
+            featureGroup.addLayer(layer);
+          }
+        });
+    map.fitBounds(loadedGroup.getBounds());
+  }
+  reader.readAsText(file);
+});
+
+var drawControl = new L.Control.Draw({
+    position: 'topright',
+    draw: {
+        circle: false,
+        rectangle: false,
+        marker: false,
+        circlemarker: false,
+        polyline: false,
+        polygon: {
+            allowIntersection: false,
+            showArea: true
+        }
+    },
+    edit: {
+        featureGroup: featureGroup,
+        poly: {
+            allowIntersection: false
+        }
+    }
+}).addTo(map);
+
+map.on('draw:created', function(e) {
+    // Each time a feaute is created, it's added to the over arching feature group
+    featureGroup.addLayer(e.layer);
+});
+
+document.getElementById('fileInputButton').onclick = function(e) {
+  // on click, popup upload file dialog
+  document.getElementById('fileInput').click();
+};
+
+document.getElementById('delete').onclick = function(e) {
+  // on click, clear all layers
+  featureGroup.clearLayers();
+};
+
+document.getElementById('export').onclick = function(e) {
+    // Extract GeoJson from featureGroup
+    var data = featureGroup.toGeoJSON();
+
+    // Stringify the GeoJson
+    var convertedData = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data));
+    
+    // Create export
+    document.getElementById('export').setAttribute('href', 'data:' + convertedData);
+    document.getElementById('export').setAttribute('download','crevasses.geojson');
+};
+
+</script>
+</body>
+</html>
