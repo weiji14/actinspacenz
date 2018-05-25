@@ -16,5 +16,6 @@ dependencies:
   - tensorflow>=1.7.0
   - tensorflow-gpu>=1.7.0
   - pip:
+    - quilt
     - tensorflowjs
 prefix: /home/user/miniconda3

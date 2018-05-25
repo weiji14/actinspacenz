@@ -7,6 +7,7 @@ Using Artificial Intelligence to develop new applications from Earth Observation
 ## Quickstart
 
 Launch Binder (Interactive jupyter notebook in the cloud).
+Data will be loaded via [Quilt](https://github.com/quiltdata/quilt). Cheers to [data2binder](https://github.com/quiltdata/data2binder)!
 
 [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/weiji14/actinspacenz/master)
 
