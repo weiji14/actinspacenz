@@ -1,6 +1,11 @@
-# [Act In Space NZ 2018](https://actinspace.nz/)
+# [Act In Space NZ 2018](https://actinspace.org)
 
-Using Artificial Intelligence to develop new applications from Earth Observation data.
+Developing a solution for maritime monitoring
+using Artificial Intelligence on Earth Observation data.
+
+![Boats detected from Sentinel 1 radar imagery](https://user-images.githubusercontent.com/23487320/113465691-ac319a00-9492-11eb-8114-90a122642b97.png)
+
+Left: Sentinel 1 radar imagery, Center: ConvNet detected ships, Right: Groundtruth labels of ships
 
 # Getting started
 
